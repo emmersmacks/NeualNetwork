@@ -26,11 +26,20 @@
             return Output;
         }
 
+        public void SetWeights(params double[] weights)
+        {
+            //TODO: delete after add learning network
+            for (int i = 0; i < weights.Length; i++)
+            {
+                Weights[i] = weights[i];
+            }
+        }
+
         private void AddWeights(int inputCount)
         {
             for (int i = 0; i < inputCount; i++)
             {
-                Weights.Add(i);
+                Weights.Add(1);
             }
         }
 
