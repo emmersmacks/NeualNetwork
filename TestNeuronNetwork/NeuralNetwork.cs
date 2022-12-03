@@ -1,102 +1,104 @@
-﻿namespace TestNeuronNetwork;
-
-public class NeuralNetwork
+﻿namespace TestNeuronNetwork
 {
-    public Topology Topology { get; }
-    public List<Layer> Layers { get; }
-
-    public NeuralNetwork(Topology topology)
+    public class NeuralNetwork
     {
-        Topology = topology;
-        Layers = new List<Layer>();
+        public Topology Topology { get; }
+        public List<Layer> Layers { get; }
 
-        CreateInputLayer();
-        CreateHiddenLayers();
-        CreateOutputLayer();
-    }
-
-    public Neuron FeedForward(List<double> inputSignals)
-    {
-        SendSignalsToInputNeurons(inputSignals);
-        FeedForwardAllLayersAfterInput();
-
-        if (Topology.OutputCount == 1)
+        public NeuralNetwork(Topology topology)
         {
-            return Layers.Last().Neurons[0];
+            Topology = topology;
+            Layers = new List<Layer>();
+
+            CreateInputLayer();
+            CreateHiddenLayers();
+            CreateOutputLayer();
         }
-        else
-        {
-            return Layers.Last().Neurons.OrderByDescending(n => n.Output).First();
-        }
-    }
 
-    private void FeedForwardAllLayersAfterInput()
-    {
-        for (int i = 1; i < Layers.Count; i++)
+        public Neuron FeedForward(List<double> inputSignals)
         {
-            var layer = Layers[i];
-            var previousLayerSignals = Layers[i - 1].GetSignals();
+            SendSignalsToInputNeurons(inputSignals);
+            FeedForwardAllLayersAfterInput();
 
-            foreach (var neuron in layer.Neurons)
+            if (Topology.OutputCount == 1)
             {
-                neuron.FeedForward(previousLayerSignals);
+                return Layers.Last().Neurons[0];
+            }
+            else
+            {
+                return Layers.Last().Neurons.OrderByDescending(n => n.Output).First();
             }
         }
-    }
 
-    private void SendSignalsToInputNeurons(List<double> inputSignals)
-    {
-        for (int i = 0; i < inputSignals.Count; i++)
+        private void FeedForwardAllLayersAfterInput()
         {
-            var signal = new List<double> { inputSignals[i] };
-            var neuron = Layers[0].Neurons[i];
+            for (int i = 1; i < Layers.Count; i++)
+            {
+                var layer = Layers[i];
+                var previousLayerSignals = Layers[i - 1].GetSignals();
 
-            neuron.FeedForward(signal);
+                foreach (var neuron in layer.Neurons)
+                {
+                    neuron.FeedForward(previousLayerSignals);
+                }
+            }
         }
-    }
 
-    private void CreateHiddenLayers()
-    {
-        for (int j = 0; j < Topology.HiddenLayers.Count; j++)
+        private void SendSignalsToInputNeurons(List<double> inputSignals)
         {
-            var hiddenNeurons = new List<Neuron>();
+            for (int i = 0; i < inputSignals.Count; i++)
+            {
+                var signal = new List<double> { inputSignals[i] };
+                var neuron = Layers[0].Neurons[i];
+
+                neuron.FeedForward(signal);
+            }
+        }
+
+        private void CreateHiddenLayers()
+        {
+            for (int j = 0; j < Topology.HiddenLayers.Count; j++)
+            {
+                var hiddenNeurons = new List<Neuron>();
+                var lastLayer = Layers.Last();
+                for (int i = 0; i < Topology.HiddenLayers[j]; i++)
+                {
+                    var neuron = new Neuron(lastLayer.Count);
+                    hiddenNeurons.Add(neuron);
+                }
+
+                var layer = new Layer(hiddenNeurons);
+                Layers.Add(layer);
+            }
+            
+        }
+
+        private void CreateOutputLayer()
+        {
+            var inputNeurons = new List<Neuron>();
             var lastLayer = Layers.Last();
-            for (int i = 0; i < Topology.HiddenLayers[j]; i++)
+            for (int i = 0; i < Topology.OutputCount; i++)
             {
-                var neuron = new Neuron(lastLayer.Count);
-                hiddenNeurons.Add(neuron);
+                var neuron = new Neuron(lastLayer.Count, ENeuronType.Output);
+                inputNeurons.Add(neuron);
             }
 
-            var layer = new Layer(hiddenNeurons);
+            var layer = new Layer(inputNeurons, ENeuronType.Output);
             Layers.Add(layer);
         }
-        
-    }
 
-    private void CreateOutputLayer()
-    {
-        var inputNeurons = new List<Neuron>();
-        var lastLayer = Layers.Last();
-        for (int i = 0; i < Topology.OutputCount; i++)
+        private void CreateInputLayer()
         {
-            var neuron = new Neuron(lastLayer.Count, ENeuronType.Output);
-            inputNeurons.Add(neuron);
+            var inputNeurons = new List<Neuron>();
+            for (int i = 0; i < Topology.InputCount; i++)
+            {
+                var neuron = new Neuron(1, ENeuronType.Input);
+                inputNeurons.Add(neuron);
+            }
+
+            var layer = new Layer(inputNeurons, ENeuronType.Input);
+            Layers.Add(layer);
         }
-
-        var layer = new Layer(inputNeurons, ENeuronType.Output);
-        Layers.Add(layer);
-    }
-
-    private void CreateInputLayer()
-    {
-        var inputNeurons = new List<Neuron>();
-        for (int i = 0; i < Topology.InputCount; i++)
-        {
-            var neuron = new Neuron(1, ENeuronType.Input);
-            inputNeurons.Add(neuron);
-        }
-
-        var layer = new Layer(inputNeurons, ENeuronType.Input);
-        Layers.Add(layer);
     }
 }
+
